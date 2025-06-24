@@ -22,7 +22,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private var stepCount = 0
     private var previousMagnitude = 0.0
-    private var threshold = 10.5  // Umbral para detectar paso (ajustable)
+    private var smoothedMagnitude = 0.0
+    private val alpha = 0.6 // Cuanto más cerca a 1, más suave
     private var cooldown = 0L     // Evita pasos dobles muy rápidos
 
     private lateinit var tvX: TextView
@@ -77,20 +78,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tvY.text = "Y: %.2f".format(y)
                 tvZ.text = "Z: %.2f".format(z)
 
-                // Magnitud sin gravedad constante (restamos 9.81)
-                val magnitude = sqrt((x * x + y * y + z * z).toDouble())
-                val magnitudeDelta = magnitude - previousMagnitude
+                // Calcular magnitud total (aceleración combinada en 3D)
+                val rawMagnitude = sqrt((x * x + y * y + z * z).toDouble())
+
+                // Aplicar filtro de paso bajo
+                smoothedMagnitude = alpha * smoothedMagnitude + (1 - alpha) * rawMagnitude
+
+                val magnitudeDelta = smoothedMagnitude - previousMagnitude
+                previousMagnitude = smoothedMagnitude
 
                 val now = System.currentTimeMillis()
 
-                // Umbral ajustado más sensible + protección por tiempo
-                if (magnitudeDelta > 1.2 && now - cooldown > 300) {
+                if (magnitudeDelta > 1.0 && now - cooldown > 300) {
                     stepCount++
                     stepCountTextView.text = "Pasos: $stepCount"
                     cooldown = now
                 }
-
-                previousMagnitude = magnitude
             }
         }
     }
