@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlin.math.sqrt
+import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -30,6 +31,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvY: TextView
     private lateinit var tvZ: TextView
 
+    private var currentDate = getCurrentDate()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -45,6 +48,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvZ = findViewById(R.id.tvZ)
 
         stepCountTextView = findViewById(R.id.tvSteps)
+
+        currentDate = getCurrentDate()
+        stepCount = getStepsForToday()
+        stepCountTextView.text = "Pasos: $stepCount"
+
+        logAllStoredSteps()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -90,9 +99,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 val now = System.currentTimeMillis()
 
                 if (magnitudeDelta > 1.0 && now - cooldown > 300) {
+                    // Si el día cambió, reiniciamos
+                    val today = getCurrentDate()
+                    if (today != currentDate) {
+                        currentDate = today
+                        stepCount = 0
+                    }
+
                     stepCount++
                     stepCountTextView.text = "Pasos: $stepCount"
                     cooldown = now
+
+                    // Guardar en SharedPreferences
+                    saveStepsForToday(stepCount)
                 }
             }
         }
@@ -100,5 +119,39 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
 
+    }
+
+    // Lógica para guardar el conteo de pasos por día
+
+    // Obtener la fecha actual
+    private fun getCurrentDate(): String {
+        // Simular fechas diferentes para probar varios registros
+        val simulatedDaysAgo = 0 // Cambiar este valor para simular diferentes días
+        val calendar = java.util.Calendar.getInstance()
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, -simulatedDaysAgo)
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        return formatter.format(calendar.time)
+    }
+
+    // Guardar y leer los pasos diarios
+    private fun saveStepsForToday(steps: Int) {
+        val date = getCurrentDate()
+        val prefs = getSharedPreferences("step_data", MODE_PRIVATE)
+        prefs.edit { putInt(date, steps) }
+    }
+
+    private fun getStepsForToday(): Int {
+        val date = getCurrentDate()
+        val prefs = getSharedPreferences("step_data", MODE_PRIVATE)
+        return prefs.getInt(date, 0)
+    }
+
+    // Mostrar todos los pasos almacenados en el log
+    private fun logAllStoredSteps() {
+        val prefs = getSharedPreferences("step_data", MODE_PRIVATE)
+        val allEntries = prefs.all
+        for ((key, value) in allEntries) {
+            Log.d("StepHistory", "Date: $key -> Steps: $value")
+        }
     }
 }
