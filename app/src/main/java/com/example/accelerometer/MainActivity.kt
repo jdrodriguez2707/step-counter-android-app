@@ -9,16 +9,16 @@ import android.util.Log
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import kotlin.math.sqrt
-import androidx.core.content.edit
+import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.charts.BarChart
-import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -33,9 +33,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val alpha = 0.6 // Cuanto más cerca a 1, más suave
     private var cooldown = 0L     // Evita pasos dobles muy rápidos
 
-    private lateinit var tvX: TextView
-    private lateinit var tvY: TextView
-    private lateinit var tvZ: TextView
+//    private lateinit var tvX: TextView
+//    private lateinit var tvY: TextView
+//    private lateinit var tvZ: TextView
 
     private var currentDate = getCurrentDate()
 
@@ -49,15 +49,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             insets
         }
 
-        tvX = findViewById(R.id.tvX)
-        tvY = findViewById(R.id.tvY)
-        tvZ = findViewById(R.id.tvZ)
+//        tvX = findViewById(R.id.tvX)
+//        tvY = findViewById(R.id.tvY)
+//        tvZ = findViewById(R.id.tvZ)
 
-        stepCountTextView = findViewById(R.id.tvSteps)
+        stepCountTextView = findViewById(R.id.textViewStepCount)
 
         currentDate = getCurrentDate()
         stepCount = getStepsForToday()
-        stepCountTextView.text = "Pasos: $stepCount"
+        stepCountTextView.text = stepCount.toString()
 
         logAllStoredSteps()
         showStepHistoryChart()
@@ -90,9 +90,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 val z = it.values[2]
                 Log.d("Accelerometer", "X: $x, Y: $y, Z: $z")
 
-                tvX.text = "X: %.2f".format(x)
-                tvY.text = "Y: %.2f".format(y)
-                tvZ.text = "Z: %.2f".format(z)
+//                tvX.text = "X: %.2f".format(x)
+//                tvY.text = "Y: %.2f".format(y)
+//                tvZ.text = "Z: %.2f".format(z)
 
                 // Calcular magnitud total (aceleración combinada en 3D)
                 val rawMagnitude = sqrt((x * x + y * y + z * z).toDouble())
@@ -178,8 +178,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        val dataSet = BarDataSet(entries, "Steps per Day")
+        val dataSet = BarDataSet(entries, "Pasos por día")
         dataSet.color = ContextCompat.getColor(this, R.color.purple_500)
+
+        // Habilitar la visualización de valores en cada barra
+        dataSet.setDrawValues(true)
+
+        // Configurar formato para mostrar valores enteros (sin decimales)
+        dataSet.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return value.toInt().toString()
+            }
+        }
 
         val barData = BarData(dataSet)
         barData.barWidth = 0.9f
