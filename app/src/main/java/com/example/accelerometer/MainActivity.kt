@@ -33,10 +33,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val alpha = 0.6 // Cuanto más cerca a 1, más suave
     private var cooldown = 0L     // Evita pasos dobles muy rápidos
 
-//    private lateinit var tvX: TextView
-//    private lateinit var tvY: TextView
-//    private lateinit var tvZ: TextView
-
     private var currentDate = getCurrentDate()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,10 +44,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
-//        tvX = findViewById(R.id.tvX)
-//        tvY = findViewById(R.id.tvY)
-//        tvZ = findViewById(R.id.tvZ)
 
         stepCountTextView = findViewById(R.id.textViewStepCount)
 
@@ -89,10 +81,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 val y = it.values[1]
                 val z = it.values[2]
                 Log.d("Accelerometer", "X: $x, Y: $y, Z: $z")
-
-//                tvX.text = "X: %.2f".format(x)
-//                tvY.text = "Y: %.2f".format(y)
-//                tvZ.text = "Z: %.2f".format(z)
 
                 // Calcular magnitud total (aceleración combinada en 3D)
                 val rawMagnitude = sqrt((x * x + y * y + z * z).toDouble())
