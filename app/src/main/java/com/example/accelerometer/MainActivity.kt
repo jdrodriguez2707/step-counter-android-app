@@ -13,6 +13,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlin.math.sqrt
 import androidx.core.content.edit
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.charts.BarChart
+import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -54,6 +60,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         stepCountTextView.text = "Pasos: $stepCount"
 
         logAllStoredSteps()
+        showStepHistoryChart()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -153,5 +160,44 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         for ((key, value) in allEntries) {
             Log.d("StepHistory", "Date: $key -> Steps: $value")
         }
+    }
+
+    private fun showStepHistoryChart() {
+        val prefs = getSharedPreferences("step_data", MODE_PRIVATE)
+        val entries = mutableListOf<BarEntry>()
+        val labels = mutableListOf<String>()
+
+        val sorted = prefs.all.toSortedMap() // Ordenar por fecha
+
+        var index = 0f
+        for ((date, value) in sorted) {
+            if (value is Int) {
+                entries.add(BarEntry(index, value.toFloat()))
+                labels.add(date)
+                index += 1f
+            }
+        }
+
+        val dataSet = BarDataSet(entries, "Steps per Day")
+        dataSet.color = ContextCompat.getColor(this, R.color.purple_500)
+
+        val barData = BarData(dataSet)
+        barData.barWidth = 0.9f
+
+        val chart = findViewById<BarChart>(R.id.barChart)
+        chart.data = barData
+        chart.setFitBars(true)
+        chart.description.isEnabled = false
+        chart.animateY(1000)
+
+        // Eje X con etiquetas de fecha
+        val xAxis = chart.xAxis
+        xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        xAxis.granularity = 1f
+        xAxis.setDrawLabels(true)
+        xAxis.setDrawGridLines(false)
+        xAxis.labelRotationAngle = -45f
+
+        chart.invalidate() // Redibujar gráfico
     }
 }
